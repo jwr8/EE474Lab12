@@ -81,12 +81,12 @@ int main() {
 	int dutyc = 0;
 	while(1) {
 		
-		int noteAb = 415;
-		int noteA = 440;
-		int noteF = 349;
-		int noteC = 523;
-		int noteE = 659;
-		int noteF2 = 698;
+		int noteAb = 2409639;
+		int noteA = 2272727;
+		int noteF = 2865330;
+		int noteC = 1912046;
+		int noteE = 1517451;
+		int noteF2 = 1432665;
 		
 		
 		// Sets note and duty cycle for the Pulse Width Modulation output
@@ -94,9 +94,9 @@ int main() {
 			note = 200000 + (25000 * count);		
 			dutyc = note / 2;
 		} else if (noteSpace % 2 == 0) { // Plays The Imperial March
-			if (count < 4 || count == 5 || count > 7) { 
+			if (count < 4 || count == 5 || count > 6) { 
 				note = noteA;
-				dutyc = note / 2;
+				dutyc = note / 4;
 				fprintf(dirduty, "%d", dutyc); // make into method
 				fflush(dirduty);
 				fprintf(dirT, "%d", note);
@@ -120,7 +120,7 @@ int main() {
 				fflush(dirT);
 			} 	
 		} else {
-			if (count < 4 || count > 6) {
+			if (count < 4) {
 				note = noteE;
 				dutyc = note / 2;
 				fprintf(dirduty, "%d", dutyc); // make into method
@@ -168,6 +168,13 @@ int main() {
 				fflush(dirduty);
 				fprintf(dirT, "%d", note);
 				fflush(dirT);
+			} else {
+				note = noteA;
+				dutyc = note / 2;
+				fprintf(dirduty, "%d", dutyc); // make into method
+				fflush(dirduty);
+				fprintf(dirT, "%d", note);
+				fflush(dirT);
 			}	
 		}
 			
@@ -208,4 +215,3 @@ int main() {
 	fclose(val27);
 	return 0;
 }
-

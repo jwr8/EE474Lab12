@@ -5,16 +5,22 @@
  *	Blinks and external LED from gpio0[8] = x70 pin 27 // needs changing ************
  */
 
-#include <stdio.h>      // for File IO and printf
-#include <time.h>       // for usleep
-#include <math.h>//********************************************* may delete later ****************//
+#include <stdio.h>  // for File IO and printf
 #include <unistd.h> // for usleep
-
 
 #define GPIO_PIN_45 45   // LED pin #1 for the down counter
 #define GPIO_PIN_47 47	 // LED pin #2
 #define GPIO_PIN_27 27   // LED pin #3
-#define sleepTime 500000
+const int sleepTime = 500000; // delay time in microseconds
+
+// period of notes used in nanoseconds
+const int noteAb = 2409639;
+const int noteA = 2272727;
+const int noteF = 2865330;
+const int noteC = 1912046;
+const int noteE = 1517451;
+const int noteF2 = 1432665;
+void soundChange(FILE*, FILE*, int, int);
 int main() {
 
 	// Creates pointers to interface with the files of the Beaglebone
@@ -77,112 +83,7 @@ int main() {
 	int counter[3] = {0, 0, 0};
 	int count = 0;
 	int noteSpace = 0;
-	int note = 0;
-	int dutyc = 0;
 	while(1) {
-		
-		int noteAb = 2409639;
-		int noteA = 2272727;
-		int noteF = 2865330;
-		int noteC = 1912046;
-		int noteE = 1517451;
-		int noteF2 = 1432665;
-		
-		
-		// Sets note and duty cycle for the Pulse Width Modulation output
-		if (noteSpace == 99) { // Plays a distinct note for each count
-			note = 200000 + (25000 * count);		
-			dutyc = note / 2;
-		} else if (noteSpace % 2 == 0) { // Plays The Imperial March
-			if (count < 4 || count == 5 || count > 6) { 
-				note = noteA;
-				dutyc = note / 4;
-				fprintf(dirduty, "%d", dutyc); // make into method
-				fflush(dirduty);
-				fprintf(dirT, "%d", note);
-				fflush(dirT);
-			} else if (count == 4 || count == 6) {
-				note = noteF;
-				dutyc = note / 2;
-				
-				fprintf(dirduty, "%d", dutyc); // make into method
-				fflush(dirduty);
-				fprintf(dirT, "%d", note);
-				fflush(dirT);
-				usleep(sleepTime * 3 / 4);
-				
-				note = noteC;
-				dutyc = note / 2;
-				
-				fprintf(dirduty, "%d", dutyc); // make into method
-				fflush(dirduty);
-				fprintf(dirT, "%d", note);
-				fflush(dirT);
-			} 	
-		} else {
-			if (count < 4) {
-				note = noteE;
-				dutyc = note / 2;
-				fprintf(dirduty, "%d", dutyc); // make into method
-				fflush(dirduty);
-				fprintf(dirT, "%d", note);
-				fflush(dirT);
-				
-			} else if (count == 4) {
-				note = noteF2;
-				dutyc = note / 2;
-				fprintf(dirduty, "%d", dutyc); // make into method
-				fflush(dirduty);
-				fprintf(dirT, "%d", note);
-				fflush(dirT);
-				usleep(sleepTime * 3 / 4);
-				
-				note = noteC;
-				dutyc = note / 2;
-				
-				fprintf(dirduty, "%d", dutyc); // make into method
-				fflush(dirduty);
-				fprintf(dirT, "%d", note);
-				fflush(dirT);
-			} else if (count == 5) {
-				note = noteAb;
-				dutyc = note / 2;
-				fprintf(dirduty, "%d", dutyc); // make into method
-				fflush(dirduty);
-				fprintf(dirT, "%d", note);
-				fflush(dirT);
-			} else if (count == 6){
-				note = noteF;
-				dutyc = note / 2;
-				
-				fprintf(dirduty, "%d", dutyc); // make into method
-				fflush(dirduty);
-				fprintf(dirT, "%d", note);
-				fflush(dirT);
-				usleep(sleepTime * 3 / 4);
-				
-				note = noteC;
-				dutyc = note / 2;
-				
-				fprintf(dirduty, "%d", dutyc); // make into method
-				fflush(dirduty);
-				fprintf(dirT, "%d", note);
-				fflush(dirT);
-			} else {
-				note = noteA;
-				dutyc = note / 2;
-				fprintf(dirduty, "%d", dutyc); // make into method
-				fflush(dirduty);
-				fprintf(dirT, "%d", note);
-				fflush(dirT);
-			}	
-		}
-			
-		// Increments time counters
-		count = (count + 1) % 8;
-		if (count == 0) {
-			noteSpace = (noteSpace + 1) % 100;
-		}
 		
 		// Creates the binary representation of the looping down counter
 		fprintf(val45, "%d", counter[0]);
@@ -198,8 +99,45 @@ int main() {
 		counter[1] = temp0 ^ temp1;
 		counter[2] = (~temp0 & temp2) | (~temp1 & temp2) | (temp0 & temp1 & ~temp2);
 		
-      // Delays for the given constant located at the top of the file in microseconds
-      usleep(sleepTime);		
+		// Sets note and duty cycle for the Pulse Width Modulation output
+		if (noteSpace == 99) { // Plays a distinct note for each count
+			int note = 200000 + (25000 * count);		
+			soundChange(dirduty, dirT, note, note / 2);
+		} else if (noteSpace % 2 == 0) { // Plays The Imperial March - John Williams
+			if (count < 4 || count == 5 || count > 7) { 
+				soundChange(dirduty, dirT, noteA, noteA / 2);
+			} else if (count == 4 || count == 6) {
+				soundChange(dirduty, dirT, noteF, noteF / 2);
+				usleep(sleepTime * 3 / 4); // 3/16 note
+				soundChange(dirduty, dirT, noteC, noteC / 2);
+			} 	
+		} else {
+			if (count < 4 || count > 6) {
+				soundChange(dirduty, dirT, noteE, noteE / 2);
+			} else if (count == 4) {
+				soundChange(dirduty, dirT, noteF2, noteF2 / 2);
+				usleep(sleepTime * 3 / 4); // 3/16 note
+				soundChange(dirduty, dirT, noteC, noteC / 2);
+			} else if (count == 5) {
+				soundChange(dirduty, dirT, noteAb, noteAb / 2);
+			} else if (count == 6){
+				soundChange(dirduty, dirT, noteF, noteF / 2);
+				usleep(sleepTime * 3 / 4); // 3/16 note
+				soundChange(dirduty, dirT, noteC, noteC / 2);
+			}	
+		}
+			
+		// Delays for the given constant located at the top of the file in microseconds
+		usleep(sleepTime);
+		
+		// Increments time counters
+		count = (count + 1) % 8;
+		if (count == 0) {
+			noteSpace = (noteSpace + 1) % 100;
+		}
+		
+		// ensures no sound on program termination
+		soundChange(dirduty, dirT, 0, 0); 
 	}
 
     // Closes all accessed files
@@ -213,5 +151,15 @@ int main() {
 	fclose(val45);
 	fclose(val47);
 	fclose(val27);
-	return 0;
+	
+	// returns 0 if program runs all the way through
+	return 0; 
 }
+
+void soundChange(FILE *dirduty, FILE *dirT, int dutyc, int note) {
+	fprintf(dirduty, "%d", dutyc); // make into method
+	fflush(dirduty);
+	fprintf(dirT, "%d", note);
+	fflush(dirT);
+}
+
